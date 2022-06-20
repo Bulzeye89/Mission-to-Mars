@@ -6,7 +6,7 @@ import datetime as dt
 from webdriver_manager.chrome import ChromeDriverManager
 
 
-def scrap_all():
+def scrape_all():
 
     #Initiate headless driver for deployment
     executable_path = {'executable_path': ChromeDriverManager().install()}
@@ -20,7 +20,8 @@ def scrap_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
-        "last modified":dt.datetime.now()
+        "last modified":dt.datetime.now(),
+        "hemisphere_images": hemisphere_images(browser)
     }
     
     #Stop webdriver and return data
@@ -28,7 +29,7 @@ def scrap_all():
     return data
         
                                        
-
+### Mars News
 
 def mars_news(browser):
     #Visit the mars nasa news site
@@ -121,11 +122,50 @@ def mars_facts():
     
     
     #Convert dataframe into HTML format, add bootstrap
-    return df.to_html()
+    return df.to_html(classes="table table-striped")
+
+def hemisphere_images(browser):
+    
+    # 1. Use browser to visit the URL 
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+
+
+    # 2. Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+    # 3. Write code to retrieve the image urls and titles for each hemisphere.
+    for hemis in range(4):
+        
+        hemispheres = {}
+        
+        browser.links.find_by_partial_text('Hemisphere')[hemis].click()
+    
+        #Parse the resulting html with soup
+        html=browser.html
+        hemi_soup = soup(html, "html.parser")
+                
+        #Find title and image URL 
+        title = hemi_soup.find('h2',class_='title').text
+        img_url = hemi_soup.find('li').a.get('href')
+    
+        
+        hemispheres['img_url'] =  f'https://marshemispheres.com/{img_url}'
+        hemispheres['title'] = title
+    
+        #Add the dictionary to the list created in step 2
+        hemisphere_image_urls.append(hemispheres)
+    
+        browser.back()
+        
+    return hemisphere_image_urls
+
+
+
 
     
 if __name__ == "__main__":
     
-    #If running as script, print scraped ata
+    #If running as script, print scraped data
     print(scrape_all())
 
